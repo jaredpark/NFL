@@ -1,0 +1,33 @@
+Season,Conference,Division,Team,Name,Wins,Losses,Ties,Percentage,PointsFor,PointsAgainst,NetPoints,Touchdowns,DivisionWins,DivisionLosses,ConferenceWins,ConferenceLosses
+2012,AFC,East,NE,New England Patriots,12,4,0,0.750,557,331,226,67,6,0,11,1
+2012,AFC,East,MIA,Miami Dolphins,7,9,0,0.438,288,317,-29,31,2,4,5,7
+2012,AFC,East,BUF,Buffalo Bills,6,10,0,0.375,344,435,-91,40,2,4,5,7
+2012,AFC,East,NYJ,New York Jets,6,10,0,0.375,281,375,-94,31,2,4,4,8
+2012,AFC,North,BAL,Baltimore Ravens,10,6,0,0.625,398,344,54,44,4,2,8,4
+2012,AFC,North,CIN,Cincinati Bengals,10,6,0,0.625,391,320,71,43,3,3,7,5
+2012,AFC,North,PIT,Pittsburgh Steelers,8,8,0,0.500,336,314,22,36,3,3,5,7
+2012,AFC,North,CLE,Cleveland Browns,5,11,0,0.313,302,368,-66,31,2,4,5,7
+2012,AFC,South,HOU,Houston Texans,12,4,0,0.750,416,331,85,46,5,1,10,2
+2012,AFC,South,IND,Indianapolis Colts,11,5,0,0.688,357,387,-30,40,4,2,8,4
+2012,AFC,South,TEN,Tennessee Titans,6,10,0,0.375,330,471,-141,36,1,5,5,7
+2012,AFC,South,JAX,Jacksonville Jaguars,2,14,0,0.125,255,444,-189,26,2,4,2,10
+2012,AFC,West,DEN,Denver Broncos,13,3,0,0.813,481,289,192,57,6,0,10,2
+2012,AFC,West,SD,San Diego Chargers,7,9,0,0.438,350,350,0,39,4,2,7,5
+2012,AFC,West,OAK,Oakland Raiders,4,12,0,0.250,290,443,-153,28,2,4,4,8
+2012,AFC,West,KC,Kansas City Chiefs,2,14,0,0.125,211,425,-214,18,0,6,0,12
+2012,NFC,East,WAS,Washington Redskins,10,6,0,0.625,436,388,48,52,5,1,8,4
+2012,NFC,East,NYG,New York Giants,9,7,0,0.563,429,344,85,47,3,3,8,4
+2012,NFC,East,DAL,Dallas Cowboys,8,8,0,0.500,376,400,-24,41,3,3,5,7
+2012,NFC,East,PHI,Philadelphia Eagles,4,12,0,0.250,280,444,-164,29,1,5,2,10
+2012,NFC,North,GB,Green Bay Packers,11,5,0,0.688,433,336,97,53,5,1,8,4
+2012,NFC,North,CHI,Chicago Bears,10,6,0,0.625,375,277,98,42,3,3,7,5
+2012,NFC,North,MIN,Minnesota Vikings,10,6,0,0.625,379,348,31,39,4,2,7,5
+2012,NFC,North,DET,Detroit Lions,4,12,0,0.250,372,437,-65,39,0,6,3,9
+2012,NFC,South,ATL,Atlanta Falcons,13,3,0,0.813,419,299,120,46,3,3,9,3
+2012,NFC,South,CAR,Carolina Panthers,7,9,0,0.438,357,363,-6,44,3,3,5,7
+2012,NFC,South,NO,New Orleans Saints,7,9,0,0.438,461,454,7,58,3,3,5,7
+2012,NFC,South,TB,Tampa Bay Buccaneers,7,9,0,0.438,389,394,-5,44,3,3,4,8
+2012,NFC,West,SF,San Francisco 49ers,11,4,1,0.733,397,273,124,44,3,2,7,4
+2012,NFC,West,SEA,Seattle Seahawks,11,5,0,0.688,412,245,167,49,3,3,8,4
+2012,NFC,West,STL,St. Louis Rams,7,8,1,0.467,299,348,-49,32,4,1,6,5
+2012,NFC,West,ARI,Arizona Cardinals,5,11,0,0.313,250,357,-107,25,1,5,3,9

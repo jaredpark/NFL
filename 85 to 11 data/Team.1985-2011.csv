@@ -1,0 +1,36 @@
+Key,City,Name,Conference,Division
+ARI,Arizona,Cardinals,NFC,West
+ATL,Atlanta,Falcons,NFC,South
+BAL,Baltimore,Ravens,AFC,North
+BUF,Buffalo,Bills,AFC,East
+CAR,Carolina,Panthers,NFC,South
+CHI,Chicago,Bears,NFC,North
+CIN,Cincinati,Bengals,AFC,North
+CLE,Cleveland,Browns,AFC,North
+DAL,Dallas,Cowboys,NFC,East
+DEN,Denver,Broncos,AFC,West
+DET,Detroit,Lions,NFC,North
+GB,Green Bay,Packers,NFC,North
+HOU,Houston,Texans,AFC,South
+IND,Indianapolis,Colts,AFC,South
+JAX,Jacksonville,Jaguars,AFC,South
+KC,Kansas City,Chiefs,AFC,West
+LARAID,Los Angeles,Raiders,AFC,West
+LARAMS,Los Angeles,Rams,NFC,West
+MIA,Miami,Dolphins,AFC,East
+MIN,Minnesota,Vikings,NFC,North
+NE,New England,Patriots,AFC,East
+NO,New Orleans,Saints,NFC,South
+NYG,New York,Giants,NFC,East
+NYJ,New York,Jets,AFC,East
+OAK,Oakland,Raiders,AFC,West
+PHI,Philadelphia,Eagles,NFC,East
+PHO,Phoenix,Cardinals,NFC,West
+PIT,Pittsburgh,Steelers,AFC,North
+SD,San Diego,Chargers,AFC,West
+SEA,Seattle,Seahawks,NFC,West
+SF,San Francisco,49ers,NFC,West
+STL,St. Louis,Rams,NFC,West
+TB,Tampa Bay,Buccaneers,NFC,South
+TEN,Tennessee,Titans,AFC,South
+WAS,Washington,Redskins,NFC,East
