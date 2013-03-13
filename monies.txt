@@ -1,0 +1,10 @@
+money = sale price * equity = P*e = 2.2*net*e = 2.2*0.5*gross*e = 2.2*0.5*annual*customers*e = ...
+      = 2.2*0.5*200*n*e
+
+n = money/(2.2*0.5*200*equity)
+
+  = money/(annual net multiplier)/(margins)/(annual price)/(equity)
+
+  = 1M/(2.2*0.5*200*0.55)
+
+  = 8,265 annual customers at $200/yr, .55 equity, 50% margins; go get 'em
