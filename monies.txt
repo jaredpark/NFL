@@ -7,4 +7,5 @@ n = money/(2.2*0.5*200*equity)
 
   = 1M/(2.2*0.5*200*0.55)
 
-  = 8,265 annual customers at $200/yr, .55 equity, 50% margins; go get 'em
+  = 8,265 annual customers at $200/yr, 55% equity, 50% margins, 2.2x annual net profit sales price coefficient; go get 'em
+  = 1,190 annual customer at $400/yr, 75% equity, 70% margins, 4x annual net profit sales price coefficient; i can dream can't i

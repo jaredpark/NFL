@@ -96,9 +96,19 @@ featureOrganize = function(features, excludeFirstNColumns = F, N = 4){
   }
 }
 
-dropColWithNA = function(data, ...){
-  hasNA = as.logical(apply(data, 2, sumNA))
-  out = data[, !hasNA]
+dropColWithNA = function(data, hasOrAll = 'has'){
+  if (hasOrAll == 'has'){
+    hasNA = as.logical(apply(data, 2, sumNA))
+    out = data[, !hasNA]
+  } else if (hasOrAll == 'all'){
+    allNA = apply(data, 2,  meanNA) == 1
+    out = data[, !allNA]
+  }
+  return(out)
+}
+
+meanNA = function(vector){
+  out = mean(is.na(vector))
   return(out)
 }
 
@@ -111,6 +121,10 @@ imputeMedAndReturn = function(data, ...){
   require(randomForest)
   out = na.roughfix(data)
   return(out)
+}
+
+nothing = function(anything){
+  return(anything)
 }
 
 dataToFeatures = function(data, gameInfo, K, trainWeeks, trainSeasons){
@@ -164,7 +178,7 @@ seasonHelper = function(data, gameInfo, K, trainWeeks){
   return(seasData)
 }
 
-featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs = 'for', largeKaction = 'allWeek'){
+featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs = 'for', largeKaction){
   # takes a vector of weekly observations of a datum for a team in a season
   # returns a vector of length length(K) with each entry holding the k week
   # average of the datum over the previous weeks for the given team, season, week
@@ -182,7 +196,7 @@ featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs
         prevSeasGames = seasTeamGameInfo$Week[1:endRow]
         if (length(prevSeasGames) < k){
           if (largeKaction == 'NA'){
-          prevKWeeksData = NA
+            prevKWeeksData = NA
           } else if (largeKaction == 'allWeek'){
             prevKWeeksData = toExpand[seasTeamGameInfo$Week < week]
           }
@@ -192,13 +206,15 @@ featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs
         }
       }
     }
-    expandedDatum[counter] = mean(prevKWeeksData)
-    # each entry is a datum averaged over the previous k weeks
+    if (is.na(as.logical(mean(na.exclude(prevKWeeksData))))){
+      expandedDatum[counter] = NA
+    } else {
+      expandedDatum[counter] = mean(na.exclude(prevKWeeksData)) # each entry is a datum averaged over the previous k weeks
+    }
     counter = counter + 1
   }
   prettyK = ifelse(K == 0, 'All', K)
   names(expandedDatum) = paste(datumName, ifelse(forOrVs == 'for', '', 'Vs'), prettyK, 'Wk', sep = '')
-  
   return(expandedDatum)
 }
 
@@ -206,7 +222,7 @@ featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs
 ######## End make MM  ########
 ##############################
 
-MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWeeks, 
+MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWeeks, onlyTrainWithValidationWeeks = T, 
                            numLaterGames = 'all', trainWithWk17 = F, inclEarlierGamesWithAllInfo, maxK = NULL){
   # returns a list with drawer one containing a list of MM indeces for the train data
   # with the second drawer containing a list of MM indeces for the validation data;
@@ -223,6 +239,8 @@ MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWe
   prevS = 0
   prevW = 0
   counter = 0
+  lastTrainWeek = ifelse(trainWithWk17, 17, 16)
+  firstTrainWeek = 2 #no data avail in week 1 for in-season performance
   for (row in MMindex){
     s = data[row, 'Season']
     w = data[row, 'Week']
@@ -232,45 +250,48 @@ MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWe
       counter = counter + 1
       validIndex = data$Week == w & data$Season == s
       out[['validate']][[counter]] = validIndex
-      if (!numWeeksFixed){
-        # if not fixed, this method uses previous x seasons games held in weeks, in addition to all prev
-        # in-season games held in week; training a rule for validation on a given week games
-        trainIndex = ((data$Season == s) & (data$Week < w & data$Week >= min(weeks)))
-        # in season previous week games within the range of weeks
-        last = ifelse(trainWithWk17, 17, 16)
-        if (numLaterGames == 'all'){
-          trainIndex = trainIndex | (is.element(data$Season, (s - numSeas):(s-1)) & is.element(data$Week, min(weeks):last))
-        } else if (is.numeric(numLaterGames)){
-          if (max(w)+numLaterGames > last){
-            trainIndex = trainIndex | (is.element(data$Season, (s - numSeas):(s-1)) & is.element(data$Week, min(weeks):last))
+      if (onlyTrainWithValidationWeeks){
+        inSeasTrainIndex = ((data$Season == s) & (data$Week < w & data$Week >= min(weeks)))
+        prevSeasTrainIndex = (data$Season < s & is.element(data$Week, weeks))
+        if (numWeeksFixed){
+          numInSeasTrainWeeks = w - min(weeks)
+          numWeeksNeeded = numWeeks - numInSeasTrainWeeks
+          numPrevFullSeasNeeded = floor(numWeeksNeeded/length(weeks))
+          if (numPrevFullSeasNeeded > 0){
+            prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
+            trainIndex = inSeasTrainIndex | (is.element(data$Week, weeks) & is.element(data$Season, prevSeasNeeded))
           } else {
-            trainIndex = trainIndex | (is.element(data$Season, (s - numSeas):(s-1)) & is.element(data$Week, min(weeks):(max(weeks)+numLaterGames)))
+            prevSeasNeeded = s
+            trainIndex = prevSeasTrainIndex
           }
-        }
-        if (inclEarlierGamesWithAllInfo){
-          if (w > maxK + 1){
-            trainIndex = trainIndex | (is.element(data$Season, (s-numSeas):(s)) & is.element(data$Week, (maxK+1):(w-1)) )
+          if (numWeeksNeeded/length(weeks) > numPrevFullSeasNeeded){
+            numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(weeks)*numPrevFullSeasNeeded
+            trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (max(weeks)-numWeeksNeeded+1):max(weeks)) )
           }
+        } else{
+          stop('use numWeeksFixed = TRUE')
         }
-      } else{
-        # number of weeks of training data is fixed; all validation rolls contain games from the same number of weeks, though not always the same number of total games
-        trainIndex = ((data$Season == s) & (data$Week < w & data$Week >= min(weeks)))
-        currNum = 
-        last = ifelse(trainWithWk17, 17, 16)
-#        
-#         
-#         
-#         
-#         should the validation window include games from weeks not used to validate the model?
-#         
-#         
-#         
-#         
-#         
-        
-        trainIndex = trainIndex | 
+      } else if (!onlyTrainWithValidationWeeks){
+        inSeasTrainIndex = data$Season == s & is.element(data$Week, firstTrainWeek:(w-1))
+        if (numWeeksFixed){
+          numInSeasTrainWeeks = w - firstTrainWeek # -1 b/c only prev weeks data is avail, -1 when wk 2 is first train week
+          numWeeksNeeded = numWeeks - numInSeasTrainWeeks
+          numPrevFullSeasNeeded = floor(numWeeksNeeded/length(firstTrainWeek:lastTrainWeek))
+          if (numPrevFullSeasNeeded > 0){
+            prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
+            trainIndex = inSeasTrainIndex | (is.element(data$Season, prevSeasNeeded) & is.element(data$Week, firstTrainWeek:lastTrainWeek))
+          } else {
+            prevSeasNeeded = s
+            trainIndex = inSeasTrainIndex
+          }
+          if (numWeeksNeeded/length(firstTrainWeek:lastTrainWeek) > numPrevFullSeasNeeded){
+            numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(firstTrainWeek:lastTrainWeek)*numPrevFullSeasNeeded
+            trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (lastTrainWeek-numWeeksNeeded+1):lastTrainWeek) )
+          }
+        } else{
+          stop('use numWeeksFixed = TRUE')
+        }
       }
-      
       out[['train']][[counter]] = trainIndex
     }
     prevS = s
@@ -314,4 +335,3 @@ betFunc = function(myLine, ptSpread, delta){
 ##############################
 ####### End validation #######
 ##############################
-
