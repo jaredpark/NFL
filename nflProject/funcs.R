@@ -27,10 +27,10 @@ addColumn = function(data, vector){
   if (length(vector)!=nrow(data)){
     stop('data must have same number of rows as length of vector')
   }
-  toAdd = data.frame(...)
+  toAdd = data.frame(vector)
   isNew = !is.element(colnames(toAdd), colnames(data))
   if (isNew){
-    out = cbind(data, ...)
+    out = cbind(data, vector)
     return(out)
   } else {
     print('New column name is duplicate with column in data')
@@ -123,7 +123,7 @@ imputeMedAndReturn = function(data, ...){
   return(out)
 }
 
-nothing = function(anything){
+self = function(anything){
   return(anything)
 }
 
@@ -221,9 +221,13 @@ featureHelper = function(seasTeamGameInfo, toExpand, datumName, K, week, forOrVs
 ##############################
 ######## End make MM  ########
 ##############################
+# include games earlier in the season? do both (maybe an all week avg isn't as good earlier in season, will then tend to miss this feature training with earlier games)
+# include games later in the season? do both (maybe an all week avg isn't as good earlier in the season, will incorrectly decided to use this feature for predicting earlier games)
+# include weeks outside of the range of weeks for, say, a week 2-5 prediction rule? (if i think weeks 2-5 are diff enough to need their own rule, then why use non week 2-5 data to train the rule?)
+# in general, the above three decisions will lead to a trade-off between recency of training data and relevance of training
 
-MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWeeks, onlyTrainWithValidationWeeks = T, 
-                           numLaterGames = 'all', trainWithWk17 = F, inclEarlierGamesWithAllInfo, maxK = NULL){
+MMFoldIndexList = function(MM, weeks, seasons, numWeeks, onlyTrainWithValidationWeeks = T, 
+                           trainWithWk17 = F){
   # returns a list with drawer one containing a list of MM indeces for the train data
   # with the second drawer containing a list of MM indeces for the validation data;
   # the i'th element of the first drawer holds an index for MM denoting the train
@@ -245,52 +249,44 @@ MMFoldIndexList = function(MM, numWeeksFixed = F, weeks, seasons, numSeas, numWe
     s = data[row, 'Season']
     w = data[row, 'Week']
     if (s == prevS & w == prevW){
-      # do nothing, already have the train/valid indeces stored in out
+      # do nothing, already have the train/valid indeces stored in out; multiple games per week in MMindex, only need one of them to put together the training index for the entire week of games
     } else {
       counter = counter + 1
       validIndex = data$Week == w & data$Season == s
       out[['validate']][[counter]] = validIndex
       if (onlyTrainWithValidationWeeks){
         inSeasTrainIndex = ((data$Season == s) & (data$Week < w & data$Week >= min(weeks)))
-        prevSeasTrainIndex = (data$Season < s & is.element(data$Week, weeks))
-        if (numWeeksFixed){
-          numInSeasTrainWeeks = w - min(weeks)
-          numWeeksNeeded = numWeeks - numInSeasTrainWeeks
-          numPrevFullSeasNeeded = floor(numWeeksNeeded/length(weeks))
-          if (numPrevFullSeasNeeded > 0){
-            prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
-            trainIndex = inSeasTrainIndex | (is.element(data$Week, weeks) & is.element(data$Season, prevSeasNeeded))
-          } else {
-            prevSeasNeeded = s
-            trainIndex = prevSeasTrainIndex
-          }
-          if (numWeeksNeeded/length(weeks) > numPrevFullSeasNeeded){
-            numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(weeks)*numPrevFullSeasNeeded
-            trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (max(weeks)-numWeeksNeeded+1):max(weeks)) )
-          }
-        } else{
-          stop('use numWeeksFixed = TRUE')
+        
+        numInSeasTrainWeeks = w - min(weeks)
+        numWeeksNeeded = numWeeks - numInSeasTrainWeeks
+        numPrevFullSeasNeeded = floor(numWeeksNeeded/length(weeks))
+        if (numPrevFullSeasNeeded > 0){
+          prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
+          trainIndex = inSeasTrainIndex | (is.element(data$Week, weeks) & is.element(data$Season, prevSeasNeeded))
+        } else {
+          prevSeasNeeded = s
+          trainIndex = inSeasTrainIndex
+        }
+        if (numWeeksNeeded/length(weeks) > numPrevFullSeasNeeded){
+          numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(weeks)*numPrevFullSeasNeeded
+          trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (max(weeks)-numWeeksNeeded+1):max(weeks)) )
         }
       } else if (!onlyTrainWithValidationWeeks){
         inSeasTrainIndex = data$Season == s & is.element(data$Week, firstTrainWeek:(w-1))
-        if (numWeeksFixed){
-          numInSeasTrainWeeks = w - firstTrainWeek # -1 b/c only prev weeks data is avail, -1 when wk 2 is first train week
-          numWeeksNeeded = numWeeks - numInSeasTrainWeeks
-          numPrevFullSeasNeeded = floor(numWeeksNeeded/length(firstTrainWeek:lastTrainWeek))
-          if (numPrevFullSeasNeeded > 0){
-            prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
-            trainIndex = inSeasTrainIndex | (is.element(data$Season, prevSeasNeeded) & is.element(data$Week, firstTrainWeek:lastTrainWeek))
-          } else {
-            prevSeasNeeded = s
-            trainIndex = inSeasTrainIndex
-          }
-          if (numWeeksNeeded/length(firstTrainWeek:lastTrainWeek) > numPrevFullSeasNeeded){
-            numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(firstTrainWeek:lastTrainWeek)*numPrevFullSeasNeeded
-            trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (lastTrainWeek-numWeeksNeeded+1):lastTrainWeek) )
-          }
-        } else{
-          stop('use numWeeksFixed = TRUE')
+        numInSeasTrainWeeks = w - firstTrainWeek # -1 b/c only prev weeks data is avail, -1 when wk 2 is first train week
+        numWeeksNeeded = numWeeks - numInSeasTrainWeeks
+        numPrevFullSeasNeeded = floor(numWeeksNeeded/length(firstTrainWeek:lastTrainWeek))
+        if (numPrevFullSeasNeeded > 0){
+          prevSeasNeeded = (s - numPrevFullSeasNeeded):(s-1)
+          trainIndex = inSeasTrainIndex | (is.element(data$Season, prevSeasNeeded) & is.element(data$Week, firstTrainWeek:lastTrainWeek))
+        } else {
+          prevSeasNeeded = s
+          trainIndex = inSeasTrainIndex
         }
+        if (numWeeksNeeded/length(firstTrainWeek:lastTrainWeek) > numPrevFullSeasNeeded){
+          numWeeksNeeded = numWeeks - numInSeasTrainWeeks - length(firstTrainWeek:lastTrainWeek)*numPrevFullSeasNeeded
+          trainIndex = trainIndex | ( data$Season == (min(prevSeasNeeded) - 1) & is.element(data$Week, (lastTrainWeek-numWeeksNeeded+1):lastTrainWeek) )
+        } 
       }
       out[['train']][[counter]] = trainIndex
     }

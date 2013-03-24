@@ -1,11 +1,13 @@
-dataPath = '~/projects/nfl/nflProject/data_objects/'
+# MM settings:
+K = 0:14
+weeks = 2:16
+seas = 1985:2009
+
+dataPath = '~/GitHub/NFL/nflProject/data_objects/'
 load(paste(dataPath, '85to2012data.Rout', sep = ''))
 
-cleanDateString = 'Feb16'
-sourceFilePath = './'
-source(paste(sourceFilePath, 'load.R', sep = ''))
-source(paste(sourceFilePath, 'funcs.R', sep = ''))
-rm(sourceFilePath)
+cleanDateString = 'Mar18'
+source('~/GitHub/NFL/nflProject/funcs.R')
 
 allFeatNames = colnames(allDat)
 
@@ -248,7 +250,7 @@ rm(removedData, newData, infoIndex, infoNames)
 save(gameInfo, file = paste(dataPath, 'gameInfo_', cleanDateString, '.Rout', sep = ''))
 save(allDat, file = paste(dataPath, 'allDat_', cleanDateString, '.Rout', sep = ''))
 # save(unusedDat, file = paste(dataPath, 'unusedDat_', cleanDateString, '.Rout', sep = ''))
-rm(unusedDat, allDat, gameInfo)
+rm(unusedDat)
 
 # abbreviating column names for brevity
 colnames(dat) = gsub('Opponent', 'Opp', colnames(dat))
@@ -277,11 +279,22 @@ rm(gameResult)
 # generating margin of victory feature
 Margin = dat$Score - dat$OppScore
 dat$Margin = Margin
-rm(Margin)
 
 # excluding redundant opponent columns; each team has it's own row for each game
 dat = dat[, -grep('^Opp', colnames(dat))]
 
 save(dat, file = paste(dataPath, 'cleanData_', cleanDateString, '.Rout', sep = ''))
 
-rm(dataPath, cleanDateString)
+# creating model matrix
+MM = dataToMM(dat, gameInfo, K, weeks, seas, self, featureOrganize, dataToFeatures, 'testing')
+MM = dropColWithNA(MM, 'all')
+# adding week of game features
+ptSpreadAdd = addWeekOfGameFeat(allDat$PointSpread, gameInfo, MM)
+MM = cbind(MM, 'HomePtSpread' = ptSpreadAdd)
+marginAdd = addWeekOfGameFeat(Margin, gameInfo, MM)
+MM = cbind(MM, 'Response' = -marginAdd)
+
+rm(ptSpreadAdd, Margin)
+save(MM, file = paste(dataPath, 'MM_', cleanDateString, '.Rout', sep = ''))
+
+rm(dataPath, cleanDateString, allDat, dat, gameInfo)
